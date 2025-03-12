@@ -82,6 +82,10 @@ python = ["3.9", "3.10", "3.11"]
 line-length = 88
 target-version = ["py39", "py310", "py311"]
 
+[tool.isort]
+profile = "black"
+line_length = 88  # Same as Black's default
+
 [tool.ruff]
 # target-version = ["py39", "py310", "py311"]  # Support all specified Python versions
 line-length = 88
@@ -117,3 +121,8 @@ disallow_incomplete_defs = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "*.py"  # Allow any Python file, not just `test_*.py`
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv"]
+# OR you can use the following instead of excluding the entire tests directory:
+# skips = ["B101"]  # Skip assert used across the whole project

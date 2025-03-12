@@ -99,10 +99,12 @@ class TestBookVectorizer:
     @pytest.fixture
     def vectorizer(self):
         """Return a BookVectorizer with mocked dependencies."""
-        with mock.patch("epub_vectorizer.core.Config"), \
-             mock.patch("epub_vectorizer.core.EPUBProcessor"), \
-             mock.patch("epub_vectorizer.core.AnthropicEmbeddings"), \
-             mock.patch("epub_vectorizer.core.SupabaseVectorStore"):
+        with (
+            mock.patch("epub_vectorizer.core.Config"),
+            mock.patch("epub_vectorizer.core.EPUBProcessor"),
+            mock.patch("epub_vectorizer.core.AnthropicEmbeddings"),
+            mock.patch("epub_vectorizer.core.SupabaseVectorStore"),
+        ):
             vectorizer = BookVectorizer()
             yield vectorizer
 
@@ -117,7 +119,9 @@ class TestBookVectorizer:
         vectorizer.epub_processor.split_text_into_chunks.return_value = chunks
 
         # Mock uuid.uuid4 to return a predictable value
-        with mock.patch("uuid.uuid4", return_value=mock.MagicMock(return_value="test-uuid")):
+        with mock.patch(
+            "uuid.uuid4", return_value=mock.MagicMock(return_value="test-uuid")
+        ):
             book_id = vectorizer.vectorize_epub("test.epub")
 
         # Verify calls

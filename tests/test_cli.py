@@ -119,13 +119,17 @@ class TestCLI:
         ]
 
         # Call CLI
-        result = main([
-            "search",
-            "test query",
-            "--book-id", "test-book-id",
-            "--limit", "10",
-            "--metadata-only"
-        ])
+        result = main(
+            [
+                "search",
+                "test query",
+                "--book-id",
+                "test-book-id",
+                "--limit",
+                "10",
+                "--metadata-only",
+            ]
+        )
 
         # Verify
         assert result == 0
@@ -170,6 +174,8 @@ class TestCLI:
 
     def test_config_error(self):
         """Test configuration error handling."""
-        with mock.patch("epub_vectorizer.cli.Config.from_env", side_effect=ValueError("Test error")):
+        with mock.patch(
+            "epub_vectorizer.cli.Config.from_env", side_effect=ValueError("Test error")
+        ):
             result = main(["search", "test"])
             assert result == 1

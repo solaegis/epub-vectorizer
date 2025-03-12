@@ -156,7 +156,9 @@ class EPUBProcessor:
             Dictionary of metadata from Google Books
         """
         if not self.google_books_api_key:
-            logger.warning("GOOGLE_BOOKS_API_KEY not set. Skipping metadata enrichment.")
+            logger.warning(
+                "GOOGLE_BOOKS_API_KEY not set. Skipping metadata enrichment."
+            )
             return {}
 
         try:
@@ -193,15 +195,19 @@ class EPUBProcessor:
                     # Extract the relevant metadata
                     metadata = {
                         "title": book_data.get("title", title),
-                        "author": book_data.get("authors", [author])[0]
-                        if book_data.get("authors")
-                        else author,
+                        "author": (
+                            book_data.get("authors", [author])[0]
+                            if book_data.get("authors")
+                            else author
+                        ),
                         "publisher": book_data.get("publisher", ""),
                         "publication_date": book_data.get("publishedDate", ""),
                         "isbn": None,
                         "genre": book_data.get("categories", []),
                         "description": book_data.get("description", ""),
-                        "cover_url": book_data.get("imageLinks", {}).get("thumbnail", ""),
+                        "cover_url": book_data.get("imageLinks", {}).get(
+                            "thumbnail", ""
+                        ),
                         "page_count": book_data.get("pageCount", 0),
                         "language": book_data.get("language", ""),
                         # Google Books doesn't specifically track series info, but sometimes it's in the subtitle
@@ -218,24 +224,34 @@ class EPUBProcessor:
 
                     # Try to extract series info from subtitle or title
                     subtitle = book_data.get("subtitle", "")
-                    if subtitle and ("series" in subtitle.lower() or "book" in subtitle.lower()):
+                    if subtitle and (
+                        "series" in subtitle.lower() or "book" in subtitle.lower()
+                    ):
                         # Try to parse series info like "Book 1 of X Series"
-                        series_match = re.search(r"(book|volume|part)\s+(\d+)", subtitle.lower())
+                        series_match = re.search(
+                            r"(book|volume|part)\s+(\d+)", subtitle.lower()
+                        )
                         if series_match:
                             # Look for series name after "of" or in the whole subtitle
                             series_name_match = re.search(
                                 r"of\s+(the\s+)?(.*?)(\s+series)?$", subtitle.lower()
                             )
                             if series_name_match:
-                                metadata["series"] = series_name_match.group(2).strip().title()
+                                metadata["series"] = (
+                                    series_name_match.group(2).strip().title()
+                                )
                             else:
                                 metadata["series"] = subtitle.split("Book")[0].strip()
                             metadata["series_position"] = int(series_match.group(2))
 
-                    logger.info(f"Metadata enriched from Google Books for: {title} by {author}")
+                    logger.info(
+                        f"Metadata enriched from Google Books for: {title} by {author}"
+                    )
                     return metadata
                 else:
-                    logger.info(f"No matching books found in Google Books for: {title} by {author}")
+                    logger.info(
+                        f"No matching books found in Google Books for: {title} by {author}"
+                    )
                     return {}
             else:
                 logger.error(
@@ -244,7 +260,9 @@ class EPUBProcessor:
                 return {}
 
         except Exception as e:
-            logger.exception(f"Exception while fetching metadata from Google Books: {e}")
+            logger.exception(
+                f"Exception while fetching metadata from Google Books: {e}"
+            )
             return {}
 
     def extract_text_from_epub(
@@ -313,7 +331,9 @@ class EPUBProcessor:
             List of text chunks
         """
         chunks = []
-        for i in range(0, len(text), self.config.chunk_size - self.config.chunk_overlap):
+        for i in range(
+            0, len(text), self.config.chunk_size - self.config.chunk_overlap
+        ):
             chunk = text[i : i + self.config.chunk_size]
             if len(chunk) > 20:  # Only keep chunks with meaningful content
                 chunks.append(chunk)
@@ -358,7 +378,9 @@ class AnthropicEmbeddings:
                 return response.embedding
             except Exception as e:
                 if attempt == max_retries - 1:
-                    logger.exception(f"Failed to get embedding after {max_retries} attempts: {e}")
+                    logger.exception(
+                        f"Failed to get embedding after {max_retries} attempts: {e}"
+                    )
                     raise
                 wait_time = 2**attempt  # Exponential backoff
                 logger.warning(f"API error: {e}. Retrying in {wait_time} seconds...")
@@ -382,7 +404,11 @@ class SupabaseVectorStore:
     def create_table_if_not_exists(self) -> None:
         """Create the vector table in Supabase if it doesn't exist."""
         # Check if the table exists
-        response = self.supabase.table(self.table_name).select("count(*)", count="exact").execute()
+        response = (
+            self.supabase.table(self.table_name)
+            .select("count(*)", count="exact")
+            .execute()
+        )
 
         # If we got an error, the table likely doesn't exist
         if response.get("error"):
@@ -409,7 +435,7 @@ class SupabaseVectorStore:
                 content TEXT NOT NULL,
                 embedding VECTOR({self.vector_dimension})
             );
-            
+
             CREATE INDEX IF NOT EXISTS book_chunks_book_id_idx ON {self.table_name} (book_id);
             CREATE INDEX IF NOT EXISTS book_chunks_isbn_idx ON {self.table_name} (isbn) WHERE isbn IS NOT NULL;
             CREATE INDEX IF NOT EXISTS book_chunks_series_idx ON {self.table_name} (series) WHERE series IS NOT NULL;
@@ -420,7 +446,7 @@ class SupabaseVectorStore:
 
             # Create a vector index for similarity search
             create_index_sql = f"""
-            CREATE INDEX IF NOT EXISTS book_chunks_embedding_idx ON {self.table_name} 
+            CREATE INDEX IF NOT EXISTS book_chunks_embedding_idx ON {self.table_name}
             USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
             """
 
@@ -449,7 +475,9 @@ class SupabaseVectorStore:
         batch_size = 50  # Process in batches to avoid overwhelming the API
         for i in range(0, len(chunks), batch_size):
             batch_chunks = chunks[i : i + batch_size]
-            logger.info(f"Processing batch {i//batch_size + 1}/{(len(chunks)-1)//batch_size + 1}...")
+            logger.info(
+                f"Processing batch {i//batch_size + 1}/{(len(chunks)-1)//batch_size + 1}..."
+            )
 
             # Get embeddings for all chunks in the batch
             batch_data = []
@@ -464,9 +492,11 @@ class SupabaseVectorStore:
                     "publisher": metadata.get("publisher"),
                     "publication_date": metadata.get("publication_date"),
                     "isbn": metadata.get("isbn"),
-                    "genre": json.dumps(metadata.get("genre", []))
-                    if isinstance(metadata.get("genre", []), list)
-                    else None,
+                    "genre": (
+                        json.dumps(metadata.get("genre", []))
+                        if isinstance(metadata.get("genre", []), list)
+                        else None
+                    ),
                     "description": metadata.get("description"),
                     "cover_url": metadata.get("cover_url"),
                     "page_count": metadata.get("page_count"),
@@ -508,11 +538,16 @@ class SupabaseVectorStore:
         query_embedding = embedding_client.get_embedding(query)
 
         # Build the query with all metadata fields
-        similarity_query = self.supabase.table(self.table_name).select(
-            "book_title, book_author, publisher, publication_date, isbn, "
-            + "genre, description, cover_url, page_count, language, "
-            + "series, series_position, content, chunk_index, id, book_id"
-        ).order(f"embedding <-> '{str(query_embedding)}'::vector").limit(limit)
+        similarity_query = (
+            self.supabase.table(self.table_name)
+            .select(
+                "book_title, book_author, publisher, publication_date, isbn, "
+                + "genre, description, cover_url, page_count, language, "
+                + "series, series_position, content, chunk_index, id, book_id"
+            )
+            .order(f"embedding <-> '{str(query_embedding)}'::vector")
+            .limit(limit)
+        )
 
         # Add book_id filter if specified
         if book_id:
@@ -541,11 +576,17 @@ class SupabaseVectorStore:
             Book metadata dictionary
         """
         # Get book metadata
-        result = self.supabase.table(self.table_name).select(
-            "book_title, book_author, publisher, publication_date, isbn, "
-            + "genre, description, cover_url, page_count, language, "
-            + "series, series_position"
-        ).eq("book_id", book_id).limit(1).execute()
+        result = (
+            self.supabase.table(self.table_name)
+            .select(
+                "book_title, book_author, publisher, publication_date, isbn, "
+                + "genre, description, cover_url, page_count, language, "
+                + "series, series_position"
+            )
+            .eq("book_id", book_id)
+            .limit(1)
+            .execute()
+        )
 
         if not result.data:
             return {}
@@ -560,9 +601,12 @@ class SupabaseVectorStore:
                 book_info["genre"] = []
 
         # Get chunk count
-        count_result = self.supabase.table(self.table_name).select(
-            "count(*)", count="exact"
-        ).eq("book_id", book_id).execute()
+        count_result = (
+            self.supabase.table(self.table_name)
+            .select("count(*)", count="exact")
+            .eq("book_id", book_id)
+            .execute()
+        )
 
         if hasattr(count_result, "count"):
             book_info["total_chunks"] = count_result.count

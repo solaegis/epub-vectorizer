@@ -168,7 +168,9 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     Returns:
         Parsed arguments
     """
-    parser = argparse.ArgumentParser(description="Vectorize EPUB books and store in Supabase.")
+    parser = argparse.ArgumentParser(
+        description="Vectorize EPUB books and store in Supabase."
+    )
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Vectorize command
@@ -179,13 +181,19 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     search_parser = subparsers.add_parser("search", help="Search for similar text")
     search_parser.add_argument("query", help="Query text to search for")
     search_parser.add_argument("--book-id", help="Limit search to a specific book ID")
-    search_parser.add_argument("--limit", type=int, default=5, help="Maximum number of results")
     search_parser.add_argument(
-        "--metadata-only", action="store_true", help="Only show book metadata, not content chunks"
+        "--limit", type=int, default=5, help="Maximum number of results"
+    )
+    search_parser.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="Only show book metadata, not content chunks",
     )
 
     # Info command - get book information
-    info_parser = subparsers.add_parser("info", help="Get information about a book in the database")
+    info_parser = subparsers.add_parser(
+        "info", help="Get information about a book in the database"
+    )
     info_parser.add_argument("book_id", help="Book ID to get information for")
 
     return parser.parse_args(args)

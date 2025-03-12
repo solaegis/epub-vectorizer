@@ -48,7 +48,9 @@ class Config:
             missing.append("ANTHROPIC_API_KEY")
 
         if missing:
-            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+            raise ValueError(
+                f"Missing required environment variables: {', '.join(missing)}"
+            )
 
         # Optional settings with defaults
         google_books_api_key = os.getenv("GOOGLE_BOOKS_API_KEY")
