@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install hatch
+        pip install hatch pytest
         hatch build
         pip install .  # Install the package in the current directory
     - name: Run tests
