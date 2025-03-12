@@ -21,7 +21,7 @@ tasks:
   pre:
     cmds:
       - pre-commit autoupdate
-      - pre-commit run -a
+      - pre-commit run -a || pre-commit run -a
 
   push:
     cmds:
@@ -49,7 +49,7 @@ tasks:
       - "mkdir -p src/{{.PACKAGE_NAME}} tests docs .github/workflows"
       - "touch src/{{.PACKAGE_NAME}}/__init__.py tests/__init__.py docs/index.md .github/workflows/ci.yml"
       - "curl -s -o .gitignore https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore"
-      - "hatch new --init --name '{{.PACKAGE_NAME}}'"
+      - "hatch new --init '{{.PACKAGE_NAME}}'"
 
   docs:build:
     desc: "Build documentation using Hatch."
@@ -60,3 +60,14 @@ tasks:
     desc: "Serve documentation locally."
     cmds:
       - "hatch run docs:serve"
+
+  hatch:create:
+    desc: "Create the default environment using Hatch."
+    cmds:
+      - "hatch env create"
+
+  hatch:run:
+    desc: "Run a command in the default environment using Hatch."
+    cmds:
+      - task: hatch:create
+      - "hatch run {{.CLI_ARGS}}"
